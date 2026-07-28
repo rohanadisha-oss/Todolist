@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Colorful To-Do App with Alarms</title>
+    <!-- Google Fonts (Plus Jakarta Sans & Noto Sans Bengali) & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA Manifest & Theme Color -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e1b4b">
+
+    <style>
+        :root {
+            --font: 'Plus Jakarta Sans', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: var(--font);
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px 12px;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: #ffffff;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #a5b4fc;
+            margin-top: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* Notification Permission Banner */
+        .notif-banner {
+            background: #4338ca;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .notif-btn {
+            background: #ffffff;
+            color: #4338ca;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .input-card {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: var(--card-radius);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .input-card input[type="text"] {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            color: #0f172a;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .input-row-bottom {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .input-card select, .input-card input[type="datetime-local"] {
+            flex: 1;
+            min-width: 140px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            min-height: 48px;
+        }
+
+        .input-card button {
+            background: #6366f1;
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 2px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #c7d2fe;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .task-count {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* Task List */
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #0f172a;
+        }
+
+        .task-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .checkbox-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checkbox-btn i {
+            display: none;
+            font-size: 0.8rem;
+        }
+
+        .task-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .task-text {
+            font-weight: 600;
+            font-size: 0.95rem;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .meta-tags {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-top: 2px;
+            flex-wrap: wrap;
+        }
+
+        .category-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        .alarm-tag {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 10px;
+            font-size: 1.1rem;
+            opacity: 0.85;
+        }
+
+        /* Color Variants */
+        .task-item.purple  { background: #f3e8ff; border-left: 6px solid #a855f7; color: #581c87; }
+        .task-item.emerald { background: #d1fae5; border-left: 6px solid #10b981; color: #064e3b; }
+        .task-item.amber   { background: #fef3c7; border-left: 6px solid #f59e0b; color: #78350f; }
+        .task-item.blue    { background: #dbeafe; border-left: 6px solid #3b82f6; color: #1e3a8a; }
+
+        .task-item.completed {
+            opacity: 0.6;
+            filter: grayscale(0.2);
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+
+        .task-item.completed .checkbox-btn {
+            background: currentColor;
+        }
+
+        .task-item.completed .checkbox-btn i {
+            display: block;
+            color: #ffffff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 35px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--card-radius);
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="app-header">
+            <h1>✨ To-Do List & Alarms</h1>
+            <p class="subtitle">Organize tasks with timed notifications!</p>
+        </header>
+
+        <!-- Notification Banner -->
+        <div class="notif-banner" id="notifBanner">
+            <span>🔔 Enable notifications for task alarms</span>
+            <button class="notif-btn" onclick="requestNotificationPermission()">Enable</button>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-card">
+            <input type="text" id="taskInput" placeholder="Enter task name..." autocomplete="off" />
+            <div class="input-row-bottom">
+                <select id="categorySelect">
+                    <option value="blue|Routine">📏 Routine</option>
+                    <option value="purple|Food">🫒 Food</option>
+                    <option value="emerald|Medicine">💊 Medicine</option>
+                    <option value="amber|Education">📚 Education</option>
+                </select>
+                <input type="datetime-local" id="alarmInput" title="Set optional alarm time" />
+                <button id="addBtn"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+        </div>
+
+        <!-- Filter & Counter -->
+        <div class="filter-bar">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="filterTasks('all')">All</button>
+                <button class="tab-btn" onclick="filterTasks('pending')">Pending</button>
+                <button class="tab-btn" onclick="filterTasks('completed')">Completed</button>
+            </div>
+            <span class="task-count" id="taskCounter">0 Tasks</span>
+        </div>
+
+        <ul id="taskList" class="task-list"></ul>
+    </div>
+
+    <script>
+        const defaultTasks = [
+            { id: 1, text: "IX-A- Bengali", category: "blue", label: "Routine", alarmTime: "", completed: false },
+            { id: 2, text: "IX-B- Bengali", category: "blue", label: "Routine", alarmTime: "", completed: false },
+            { id: 3, text: "VIII-A- Bengali", category: "blue", label: "Routine", alarmTime: "", completed: false },
+            { id: 4, text: "VIII-B- Bengali", category: "blue", label: "Routine", alarmTime: "", completed: false },
+            { id: 5, text: "VI-A- IP", category: "blue", label: "Routine", alarmTime: "", completed: false },
+            { id: 6, text: "VI-B- IP", category: "blue", label: "Routine", alarmTime: "", completed: false },
+            { id: 7, text: "V- Bengali", category: "blue", label: "Routine", alarmTime: "", completed: false }
+        ];
+
+        let tasks = JSON.parse(localStorage.getItem('todo_tasks')) || defaultTasks;
+        let currentFilter = 'all';
+
+        const taskInput = document.getElementById('taskInput');
+        const categorySelect = document.getElementById('categorySelect');
+        const alarmInput = document.getElementById('alarmInput');
+        const addBtn = document.getElementById('addBtn');
+        const taskList = document.getElementById('taskList');
+        const taskCounter = document.getElementById('taskCounter');
+        const notifBanner = document.getElementById('notifBanner');
+
+        // Check Notification Permission
+        function checkNotificationPermission() {
+            if ("Notification" in window && Notification.permission === "granted") {
+                notifBanner.style.display = "none";
+            }
+        }
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        notifBanner.style.display = "none";
+                    }
+                });
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('todo_tasks', JSON.stringify(tasks));
+        }
+
+        // Web Audio Beep Sound Generator
+        function playAlarmSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2); // Play for 1.2s
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function triggerNotification(taskText) {
+            playAlarmSound();
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("⏰ Task Alarm Reminder", {
+                    body: taskText,
+                    icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                });
+            } else {
+                alert(`⏰ Alarm: ${taskText}`);
+            }
+        }
+
+        // Background Loop: Check alarms every 10 seconds
+        setInterval(() => {
+            const now = new Date();
+            let updated = false;
+
+            tasks.forEach(task => {
+                if (!task.completed && task.alarmTime && !task.alarmTriggered) {
+                    const alarmDate = new Date(task.alarmTime);
+                    if (now >= alarmDate) {
+                        task.alarmTriggered = true;
+                        updated = true;
+                        triggerNotification(task.text);
+                    }
+                }
+            });
+
+            if (updated) {
+                saveToLocalStorage();
+                renderTasks();
+            }
+        }, 10000);
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+
+            const filteredTasks = tasks.filter(task => {
+                if (currentFilter === 'pending') return !task.completed;
+                if (currentFilter === 'completed') return task.completed;
+                return true;
+            });
+
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-clipboard"></i>
+                        <p>No tasks available!</p>
+                    </div>
+                `;
+            } else {
+                filteredTasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.className = `task-item ${task.category} ${task.completed ? 'completed' : ''}`;
+                    
+                    const formattedAlarm = task.alarmTime ? new Date(task.alarmTime).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+
+                    li.innerHTML = `
+                        <div class="task-left">
+                            <div class="checkbox-btn" onclick="toggleTask(${task.id})">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div class="task-details">
+                                <span class="task-text">${escapeHtml(task.text)}</span>
+                                <div class="meta-tags">
+                                    <span class="category-tag">${task.label}</span>
+                                    ${formattedAlarm ? `<span class="alarm-tag"><i class="fa-regular fa-bell"></i> ${formattedAlarm}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteTask(${task.id})">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+                    taskList.appendChild(li);
+                });
+            }
+
+            const activeCount = tasks.filter(t => !t.completed).length;
+            taskCounter.textContent = `${activeCount} Pending`;
+        }
+
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (!text) return;
+
+            const selectedValue = categorySelect.value.split('|');
+            const category = selectedValue[0] || 'blue';
+            const label = selectedValue[1] || 'Task';
+            const alarmTime = alarmInput.value;
+
+            const newTask = {
+                id: Date.now(),
+                text: text,
+                category: category,
+                label: label,
+                alarmTime: alarmTime,
+                alarmTriggered: false,
+                completed: false
+            };
+
+            tasks.unshift(newTask);
+            saveToLocalStorage();
+            taskInput.value = '';
+            alarmInput.value = '';
+            renderTasks();
+            taskInput.blur();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            saveToLocalStorage();
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveToLocalStorage();
+            renderTasks();
+        }
+
+        function filterTasks(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === filter);
+            });
+            renderTasks();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        addBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+
+        checkNotificationPermission();
+        renderTasks();
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch(err => console.log('Service Worker Failed:', err));
+        }
+    </script>
+</body>
+</html>
